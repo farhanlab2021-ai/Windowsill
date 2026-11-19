@@ -13,7 +13,7 @@ import { unlockAudio } from "@/lib/audio/chime";
 import { useTimer } from "@/stores/timer";
 import { usePageActions } from "@/hooks/usePageActions";
 import { usePages } from "@/hooks/usePages";
-import { restorePage } from "@/lib/db/pages";
+import { getPage, restorePage } from "@/lib/db/pages";
 import { seedWelcomePage } from "@/lib/welcome";
 import { useUI } from "@/stores/ui";
 import { Home } from "./Home";
@@ -35,6 +35,25 @@ export function Workspace() {
       void seedWelcomePage().then((id) => id && openPage(id));
     }
   }, [pages, openPage]);
+
+  // A link to a page that isn't on this device (e.g. a link copied from another
+  // device, or an installed app with its own storage): open Home and explain,
+  // instead of a dead end. Double-checks the database first, because a page
+  // created a moment ago may not be in `pages` yet.
+  useEffect(() => {
+    if (!pages || !currentId || pages.some((p) => p.id === currentId)) return;
+    let cancelled = false;
+    void getPage(currentId).then((page) => {
+      if (cancelled || page) return;
+      window.history.replaceState(null, "", "/");
+      useUI.getState().showToast({
+        message: "That page isn't on this device, so here's Home. Notes stay on the device where you wrote them — use Settings & backup to move them.",
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [pages, currentId]);
 
   // Keyboard shortcuts: Alt + N = new page, Alt + T = start/pause timer, Ctrl/Cmd + K = search.
   useEffect(() => {
@@ -87,10 +106,9 @@ export function Workspace() {
       <main id="main" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto focus:outline-none">
         {view === "stats" ? (
           <StatsView pages={pages} />
-        ) : !currentId ? (
+        ) : !currentId || !page ? (
+          // No page open, or a page that isn't on this device (the effect above switches to Home).
           <Home pages={pages} />
-        ) : !page ? (
-          <Message title="Page not found" body="It may have been deleted forever." action={{ label: "Go home", run: () => openPage(null) }} />
         ) : page.deletedAt !== null ? (
           <Message
             title="This page is in the trash"
