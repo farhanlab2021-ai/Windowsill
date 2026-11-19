@@ -32,6 +32,12 @@ describe("blocksToPlainText", () => {
     expect(blocksToPlainText(blocks)).toBe("Lecture 3\nnested\nSee notes\nEssay | Due\ndiagram");
   });
 
+  it("includes the hidden words of imported PDF pages and slides", () => {
+    expect(blocksToPlainText([{ type: "docPage", props: { url: "asset:x", label: "Page 1", text: "Iron carbide diagram" } }])).toBe(
+      "Iron carbide diagram",
+    );
+  });
+
   it("ignores junk safely", () => {
     expect(blocksToPlainText([null, 3, "x", {}])).toBe("");
   });

@@ -46,6 +46,10 @@ interface UIState {
   hydrateExpanded: () => void;
   setExpanded: (id: string, expanded: boolean) => void;
 
+  /** A long task in progress, e.g. "Importing “Lecture 5.pdf” — page 3 of 40" (null = nothing running). */
+  busyMessage: string | null;
+  setBusyMessage: (message: string | null) => void;
+
   toasts: Toast[];
   showToast: (toast: Omit<Toast, "id">) => void;
   dismissToast: (id: number) => void;
@@ -75,6 +79,9 @@ export const useUI = create<UIState>((set, get) => ({
     saveExpanded(next);
     set({ expandedIds: next });
   },
+
+  busyMessage: null,
+  setBusyMessage: (busyMessage) => set({ busyMessage }),
 
   toasts: [],
   showToast: (toast) => {

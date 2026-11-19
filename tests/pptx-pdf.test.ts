@@ -1,7 +1,7 @@
 import JSZip from "jszip";
 import { describe, expect, it } from "vitest";
-import { cleanPdfTitle, joinLines, pdfItemsToBlocks, type PdfTextItem } from "@/lib/import/pdfText";
-import { parseSlideXml, pptxToBlocks, resolvePath } from "@/lib/import/pptx";
+import { itemsToLines, type PdfTextItem } from "@/lib/import/pdfText";
+import { openDeck, parseSlideXml, pptxToBlocks, resolvePath, slideTexts, withoutMissingParts } from "@/lib/import/pptx";
 
 // ---------------------------------------------------------------------------
 // PowerPoint
@@ -27,7 +27,7 @@ const slide2 = `<p:sld ${ns}><p:cSld><p:spTree>
 async function makePptx(): Promise<Uint8Array> {
   const zip = new JSZip();
   // The deck lists slide2.xml FIRST, so file numbers must not decide the order.
-  zip.file("ppt/presentation.xml", `<p:presentation ${ns}><p:sldIdLst><p:sldId id="256" r:id="rId8"/><p:sldId id="257" r:id="rId7"/></p:sldIdLst></p:presentation>`);
+  zip.file("ppt/presentation.xml", `<p:presentation ${ns}><p:sldIdLst><p:sldId id="256" r:id="rId8"/><p:sldId id="257" r:id="rId7"/></p:sldIdLst><p:sldSz cx="9144000" cy="6858000" type="screen4x3"/></p:presentation>`);
   zip.file("ppt/_rels/presentation.xml.rels", `<Relationships><Relationship Id="rId7" Target="slides/slide1.xml"/><Relationship Id="rId8" Target="slides/slide2.xml"/></Relationships>`);
   zip.file("ppt/slides/slide1.xml", slide1);
   zip.file("ppt/slides/slide2.xml", slide2);
@@ -78,49 +78,53 @@ describe("PowerPoint import", () => {
     expect(blocks[5].props).toEqual({ url: "asset:test-image" });
     expect(stored[0].type).toBe("image/png");
   });
+
+  it("removes index entries for parts that aren't in the file (they stop the slide drawing)", async () => {
+    const zip = new JSZip();
+    zip.file("[Content_Types].xml", `<Types><Override PartName="/ppt/slides/slide1.xml" ContentType="slide"/><Override PartName="/ppt/slideMasters/slideMaster2.xml" ContentType="master"/></Types>`);
+    zip.file("ppt/slides/slide1.xml", "<p:sld/>");
+    const cleaned = await JSZip.loadAsync(await withoutMissingParts(await zip.generateAsync({ type: "arraybuffer" })));
+    const index = await cleaned.file("[Content_Types].xml")!.async("string");
+    expect(index).toContain("slide1.xml");
+    expect(index).not.toContain("slideMaster2.xml");
+
+    const tidy = await makePptx().then((u) => u.buffer.slice(u.byteOffset, u.byteOffset + u.byteLength) as ArrayBuffer);
+    expect(await withoutMissingParts(tidy)).toBe(tidy); // nothing to remove → the same file back
+  });
+
+  it("reads the slide shape and each slide's words (kept with the slide pictures for search)", async () => {
+    const deck = await makePptx();
+    expect((await openDeck(deck)).aspect).toBeCloseTo(4 / 3);
+    expect(await slideTexts(deck)).toEqual([
+      "Organelles\nNucleus\nHolds DNA\nMitochondria\nPart | Job\nRibosome | Makes proteins\nMention the exam question",
+      "Cell biology\nLecture 3 & 4",
+    ]);
+  });
 });
 
 // ---------------------------------------------------------------------------
-// PDF
+// PDF page text (kept with each page picture for search)
 // ---------------------------------------------------------------------------
 
 const item = (str: string, x: number, y: number, size = 11, width = str.length * size * 0.5): PdfTextItem => ({ str, x, y, size, width });
 
-describe("PDF text import", () => {
-  it("rebuilds headings, paragraphs and list items from positioned text", () => {
-    const blocks = pdfItemsToBlocks([
-      item("Week 5: Thermodynamics", 72, 760, 20),
-      item("Energy cannot be created", 72, 720),
-      item("or destroyed.", 210, 720), // same line, second piece
+describe("PDF page text", () => {
+  it("groups positioned text pieces into lines, top of the page first", () => {
+    const lines = itemsToLines([
       item("It only changes form.", 72, 706),
-      item("Key laws", 72, 670, 14),
-      item("• First law: conservation", 72, 650),
-      item("2. Second law: entropy rises", 72, 636),
-      item("A new paragraph after a gap.", 72, 600),
+      item("Week 5: Thermodynamics", 72, 760, 20),
+      item("or destroyed.", 210, 720), // same line as the next piece
+      item("Energy cannot be created", 72, 720),
     ]);
-    expect(blocks).toEqual([
-      { type: "heading", props: { level: 2 }, content: "Week 5: Thermodynamics" },
-      { type: "paragraph", content: "Energy cannot be created or destroyed. It only changes form." },
-      { type: "heading", props: { level: 3 }, content: "Key laws" },
-      { type: "bulletListItem", content: "First law: conservation" },
-      { type: "numberedListItem", content: "Second law: entropy rises" },
-      { type: "paragraph", content: "A new paragraph after a gap." },
+    expect(lines.map((l) => l.text)).toEqual([
+      "Week 5: Thermodynamics",
+      "Energy cannot be created or destroyed.",
+      "It only changes form.",
     ]);
   });
 
   it("returns nothing for a page without text (a scanned page)", () => {
-    expect(pdfItemsToBlocks([])).toEqual([]);
-    expect(pdfItemsToBlocks([item("   ", 10, 10)])).toEqual([]);
-  });
-
-  it("re-joins words split across lines with a hyphen", () => {
-    expect(joinLines(["The mito-", "chondria is", "here."])).toBe("The mitochondria is here.");
-  });
-
-  it("tidies PDF titles", () => {
-    expect(cleanPdfTitle("Microsoft Word - Essay plan.docx")).toBe("Essay plan");
-    expect(cleanPdfTitle("untitled")).toBeNull();
-    expect(cleanPdfTitle(undefined)).toBeNull();
-    expect(cleanPdfTitle("Lecture 5 slides")).toBe("Lecture 5 slides");
+    expect(itemsToLines([])).toEqual([]);
+    expect(itemsToLines([item("   ", 10, 10)])).toEqual([]);
   });
 });

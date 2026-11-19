@@ -1,12 +1,13 @@
 "use client";
 
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { useUI } from "@/stores/ui";
 
 /** Small notifications at the bottom of the screen, e.g. "Moved to trash · Undo". */
 export function Toaster() {
   const toasts = useUI((s) => s.toasts);
   const dismiss = useUI((s) => s.dismissToast);
+  const busy = useUI((s) => s.busyMessage);
 
   return (
     <div
@@ -14,6 +15,12 @@ export function Toaster() {
       aria-live="polite"
       className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex flex-col items-center gap-2 px-4"
     >
+      {busy && (
+        <div className="pointer-events-auto flex max-w-md items-center gap-3 rounded-xl bg-ink px-4 py-2.5 text-sm text-canvas shadow-pop">
+          <Loader2 className="size-4 shrink-0 motion-safe:animate-spin" aria-hidden />
+          <span>{busy}</span>
+        </div>
+      )}
       {toasts.map((toast) => (
         <div
           key={toast.id}

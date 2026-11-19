@@ -44,5 +44,7 @@ Only use media that is free for commercial use: **CC0**, the **Pexels License** 
 | [mammoth](https://github.com/mwilliamson/mammoth.js) | Importing Word (.docx) files | BSD 2-Clause |
 | [pdf.js](https://mozilla.github.io/pdf.js/) (Mozilla) | Importing PDF files | Apache 2.0 |
 | [JSZip](https://stuk.github.io/jszip/) | Reading PowerPoint (.pptx) files | MIT |
+| [pptx-preview](https://www.npmjs.com/package/pptx-preview) | Drawing PowerPoint slides | ISC (npm package free for personal and commercial use) |
+| [html-to-image](https://github.com/bubkoo/html-to-image) | Saving drawn slides as pictures | MIT |
 
 Emoji are drawn by your operating system's emoji font.

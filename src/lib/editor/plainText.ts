@@ -52,6 +52,8 @@ export function blocksToPlainText(blocks: unknown[]): string {
       // Image captions and file names are searchable too.
       const props = block.props as Json | undefined;
       if (typeof props?.caption === "string" && props.caption) lines.push(props.caption);
+      // Imported PDF pages and slides keep their words in `text`, so search finds them.
+      if (block.type === "docPage" && typeof props?.text === "string" && props.text) lines.push(props.text);
       if (Array.isArray(block.children)) visit(block.children);
     }
   };

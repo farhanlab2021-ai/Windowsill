@@ -82,21 +82,35 @@ function withoutRepeatedTitle(blocks: unknown[], title: string): unknown[] {
   return first?.type === "heading" && blocksToPlainText([first]).trim() === title.trim() ? blocks.slice(1) : blocks;
 }
 
+/** Reports progress, e.g. "Importing Lecture 5.pdf — page 3 of 40". */
+export type ImportProgress = (message: string) => void;
+
 /** Converts one file into a page title and editor blocks. */
-async function convert(file: File, kind: Exclude<ReturnType<typeof importKind>, "backup" | null>) {
+async function convert(file: File, kind: Exclude<ReturnType<typeof importKind>, "backup" | null>, onProgress?: ImportProgress) {
   const fallbackTitle = titleFromFileName(file.name);
+  const progress = (what: string) => (done: number, total: number) => onProgress?.(`Importing “${file.name}” — ${what} ${done} of ${total}`);
   if (kind === "text") return { title: fallbackTitle, blocks: textToBlocks(await file.text()) as unknown[] };
   if (kind === "pptx") {
-    const { pptxToBlocks } = await import("./pptx"); // loaded only when a slide deck is imported
-    const deck = await pptxToBlocks(await file.arrayBuffer(), storeImage);
+    // Slides are shown as they look in PowerPoint. If a deck can't be drawn, fall back to its text.
+    const data = await file.arrayBuffer();
+    try {
+      const { pptxToSlideImages } = await import("./pptxSlides"); // loaded only when a deck is imported
+      const slides = await pptxToSlideImages(data, storeImage, progress("slide"));
+      if (slides.length) return { title: fallbackTitle, blocks: slides as unknown[] };
+    } catch (err) {
+      console.warn("Couldn't draw the slides; importing their text instead.", err);
+    }
+    const { pptxToBlocks } = await import("./pptx");
+    const deck = await pptxToBlocks(data, storeImage);
     return { title: deck.title ?? fallbackTitle, blocks: deck.blocks as unknown[] };
   }
   if (kind === "pdf") {
+    // Every page is shown exactly as it looks in the PDF.
     const { pdfToBlocks, MAX_PDF_PAGES } = await import("./pdf"); // loaded only when a PDF is imported
-    const pdf = await pdfToBlocks(await file.arrayBuffer(), storeImage);
+    const pdf = await pdfToBlocks(await file.arrayBuffer(), storeImage, progress("page"));
     const blocks: unknown[] = pdf.blocks;
     if (pdf.truncated) blocks.push({ type: "paragraph", content: `(Only the first ${MAX_PDF_PAGES} pages were imported.)` });
-    return { title: pdf.title ?? fallbackTitle, blocks };
+    return { title: fallbackTitle, blocks };
   }
   const editor = await getConverter();
   if (kind === "markdown") {
@@ -109,10 +123,15 @@ async function convert(file: File, kind: Exclude<ReturnType<typeof importKind>, 
 }
 
 /** Imports the chosen files, one new page per file (inside `parentId` if given). */
-export async function importFiles(files: File[], parentId: string | null = null): Promise<ImportResult> {
+export async function importFiles(
+  files: File[],
+  parentId: string | null = null,
+  onProgress?: ImportProgress,
+): Promise<ImportResult> {
   const result: ImportResult = { pages: [], restoredPages: 0, skipped: [] };
 
   for (const file of files) {
+    onProgress?.(`Importing “${file.name}”…`);
     const kind = importKind(file.name, file.type);
     if (!kind) {
       result.skipped.push({ name: file.name, reason: unsupportedReason(file.name) });
@@ -127,7 +146,7 @@ export async function importFiles(files: File[], parentId: string | null = null)
         result.restoredPages += (await restoreBackup(parseBackup(await file.text()))).pages;
         continue;
       }
-      const { title, blocks } = await convert(file, kind);
+      const { title, blocks } = await convert(file, kind, onProgress);
       if (blocks.length === 0) {
         result.skipped.push({ name: file.name, reason: "it's empty" });
         continue;

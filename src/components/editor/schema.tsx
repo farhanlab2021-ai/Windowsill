@@ -10,6 +10,7 @@ import {
 import { getDefaultReactSlashMenuItems, type DefaultReactSuggestionItem } from "@blocknote/react";
 import { CalendarDays, Lightbulb } from "lucide-react";
 import { createCalloutBlock } from "./blocks/Callout";
+import { createDocPageBlock } from "./blocks/DocPage";
 import { DateChip, todayDateChip } from "./inline/DateChip";
 
 /**
@@ -21,7 +22,8 @@ import { DateChip, todayDateChip } from "./inline/DateChip";
 const { audio, video, file, ...blocks } = defaultBlockSpecs;
 
 export const schema = BlockNoteSchema.create({
-  blockSpecs: { ...blocks, callout: createCalloutBlock() },
+  // docPage = a page of an imported PDF or a PowerPoint slide (not in the "/" menu; only imports create it).
+  blockSpecs: { ...blocks, callout: createCalloutBlock(), docPage: createDocPageBlock() },
   inlineContentSpecs: { ...defaultInlineContentSpecs, dateChip: DateChip },
 });
 

@@ -135,19 +135,8 @@ function bulletsToBlocks(paragraphs: SlideParagraph[]): Block[] {
   return root;
 }
 
-export interface PptxResult {
-  title: string | null;
-  blocks: Block[];
-}
-
-/**
- * Converts a .pptx file. `storeImage` saves a picture and returns the URL to
- * use for it (Windowsill saves it on the device); return null to skip it.
- */
-export async function pptxToBlocks(
-  data: ArrayBuffer | Uint8Array,
-  storeImage: (blob: Blob) => Promise<string | null>,
-): Promise<PptxResult> {
+/** Opens a .pptx: its files, the slides in presentation order, and the slide shape (width ÷ height). */
+export async function openDeck(data: ArrayBuffer | Uint8Array) {
   const zip = await JSZip.loadAsync(data);
   const read = async (path: string) => (await zip.file(path)?.async("string")) ?? null;
 
@@ -168,6 +157,67 @@ export async function pptxToBlocks(
       .sort((a, b) => Number(a.match(/(\d+)\.xml$/)![1]) - Number(b.match(/(\d+)\.xml$/)![1]));
   }
 
+  // Slide size in EMUs, e.g. 12192000 × 6858000 for 16:9 (the usual default).
+  const size = presentation?.match(/<p:sldSz\b[^>]*\bcx="(\d+)"[^>]*\bcy="(\d+)"/);
+  const aspect = size ? Number(size[1]) / Number(size[2]) : 16 / 9;
+  return { zip, read, slidePaths, aspect };
+}
+
+/**
+ * Some tools (and some PowerPoint exports) list parts in the file's index,
+ * [Content_Types].xml, that aren't actually in the file. PowerPoint ignores
+ * them, but the slide-drawing library stops at the first one. This returns a
+ * copy of the deck with those dangling entries removed (or the original if
+ * there were none).
+ */
+export async function withoutMissingParts(data: ArrayBuffer): Promise<ArrayBuffer> {
+  const zip = await JSZip.loadAsync(data);
+  const index = await zip.file("[Content_Types].xml")?.async("string");
+  if (!index) return data;
+  let removed = 0;
+  const cleaned = index.replace(/<Override\b[^>]*PartName="\/([^"]+)"[^>]*\/>/g, (entry, part: string) => {
+    if (zip.file(decodeURIComponent(part))) return entry;
+    removed++;
+    return "";
+  });
+  if (!removed) return data;
+  zip.file("[Content_Types].xml", cleaned);
+  return zip.generateAsync({ type: "arraybuffer" });
+}
+
+/** Each slide's words (title, text, speaker notes), in order — kept with the slide pictures for search. */
+export async function slideTexts(data: ArrayBuffer | Uint8Array): Promise<string[]> {
+  const { read, slidePaths } = await openDeck(data);
+  const texts: string[] = [];
+  for (const path of slidePaths) {
+    const xml = await read(path);
+    if (!xml) {
+      texts.push("");
+      continue;
+    }
+    const slide = parseSlideXml(xml);
+    const rels = parseRels((await read(relsPathOf(path))) ?? "");
+    const notesTarget = Object.entries(rels).find(([, t]) => /notesSlide\d+\.xml$/.test(t))?.[1];
+    const notesXml = notesTarget ? await read(resolvePath(path, notesTarget)) : null;
+    texts.push([slide.title, ...slide.paragraphs.map((p) => p.text), ...(notesXml ? parseNotesXml(notesXml) : [])].filter(Boolean).join("\n"));
+  }
+  return texts;
+}
+
+export interface PptxResult {
+  title: string | null;
+  blocks: Block[];
+}
+
+/**
+ * Converts a .pptx file. `storeImage` saves a picture and returns the URL to
+ * use for it (Windowsill saves it on the device); return null to skip it.
+ */
+export async function pptxToBlocks(
+  data: ArrayBuffer | Uint8Array,
+  storeImage: (blob: Blob) => Promise<string | null>,
+): Promise<PptxResult> {
+  const { zip, read, slidePaths } = await openDeck(data);
   const blocks: Block[] = [];
   let deckTitle: string | null = null;
 

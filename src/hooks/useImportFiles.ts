@@ -30,10 +30,17 @@ export function useImportFiles() {
         input.remove();
         if (files.length === 0) return;
         // The import code (and its converters) loads only now, when it's needed.
-        const { importFiles, describeImport } = await import("@/lib/import/importFiles");
-        const result = await importFiles(files, parentId);
+        const setBusy = useUI.getState().setBusyMessage;
+        setBusy(`Importing ${files.length === 1 ? `“${files[0].name}”` : `${files.length} files`}…`);
+        let result;
+        try {
+          const { importFiles, describeImport } = await import("@/lib/import/importFiles");
+          result = await importFiles(files, parentId, setBusy);
+          showToast({ message: describeImport(result) });
+        } finally {
+          setBusy(null);
+        }
         if (parentId && result.pages.length) setExpanded(parentId, true);
-        showToast({ message: describeImport(result) });
         const last = result.pages.at(-1);
         if (last) openPage(last.id);
       });
