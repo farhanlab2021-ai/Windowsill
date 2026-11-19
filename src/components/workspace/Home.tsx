@@ -47,7 +47,7 @@ export function Home({ pages }: { pages: Page[] }) {
       >
         <Upload className="size-4" /> Import file
       </button>
-      <p className="mt-2 text-xs text-muted">Import Markdown (.md), text (.txt), Word (.docx) or web pages (.html) as pages.</p>
+      <p className="mt-2 text-xs text-muted">Import PDF, PowerPoint (.pptx), Word (.docx), Markdown (.md), text or web-page files as pages.</p>
 
       <section className="mt-12">
         <h2 className="mb-3 text-xs font-semibold tracking-wider text-faint uppercase">Start from a template</h2>
