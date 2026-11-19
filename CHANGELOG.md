@@ -13,6 +13,14 @@ What was built in each phase of Windowsill.
   (`.json`) is restored. Files over 10 MB, empty files and other types are skipped with a reason.
   The converters only load when someone imports.
 
+- **PDF import** (Mozilla's pdf.js): headings, paragraphs and lists rebuilt from each page's text;
+  pages without text (scans, photos) are added as page pictures; pages separated by dividers; the
+  PDF's title is used when it has one. Up to 300 pages and 50 MB.
+- **PowerPoint import** (.pptx, read with JSZip): each slide becomes "Slide N: title", its bullet
+  points (indent levels kept), tables, pictures and speaker notes, in presentation order. Up to 50 MB.
+- Old `.ppt` and `.doc` files get a clear message explaining how to save them as `.pptx` / `.docx`.
+- The PDF reader's worker is served from the app itself and saved for offline use (service worker v3).
+
 ### Fixed
 - Opening a link to a page that isn't on this device (e.g. copied from another device, or an
   installed phone app with its own storage) now opens Home with an explanation instead of

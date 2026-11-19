@@ -4,10 +4,20 @@
  * called, and how plain text becomes paragraphs.
  */
 
-export type ImportKind = "markdown" | "text" | "html" | "docx" | "backup";
+export type ImportKind = "markdown" | "text" | "html" | "docx" | "pdf" | "pptx" | "backup";
 
-/** Files bigger than this are skipped (a note this large is almost certainly not a note). */
-export const MAX_IMPORT_BYTES = 10 * 1024 * 1024;
+/** Files bigger than this are skipped. PDFs and slide decks hold pictures, so they get more room. */
+export function maxImportBytes(kind: ImportKind): number {
+  return (kind === "pdf" || kind === "pptx" ? 50 : 10) * 1024 * 1024;
+}
+
+/** Why a file type can't be imported, with a hint where there's an easy way round it. */
+export function unsupportedReason(name: string): string {
+  const ext = name.toLowerCase().match(/\.([a-z0-9]+)$/)?.[1] ?? "";
+  if (ext === "ppt") return "old .ppt files aren't supported — open it in PowerPoint and save as .pptx";
+  if (ext === "doc") return "old .doc files aren't supported — open it in Word and save as .docx";
+  return "this file type isn't supported";
+}
 
 /**
  * What the file picker offers. File types (text/*, the Word type) are listed
@@ -15,9 +25,10 @@ export const MAX_IMPORT_BYTES = 10 * 1024 * 1024;
  * only extensions are given.
  */
 export const IMPORT_ACCEPT = [
-  ".md,.markdown,.txt,.html,.htm,.docx,.json",
-  "text/*,application/json",
+  ".md,.markdown,.txt,.html,.htm,.docx,.pdf,.pptx,.json",
+  "text/*,application/json,application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 ].join(",");
 
 /** Decides how to read a file, from its name (and type as a fallback). Null = not supported. */
@@ -27,7 +38,10 @@ export function importKind(name: string, mimeType = ""): ImportKind | null {
   if (ext === "txt" || ext === "text") return "text";
   if (ext === "html" || ext === "htm") return "html";
   if (ext === "docx") return "docx";
+  if (ext === "pdf") return "pdf";
+  if (ext === "pptx") return "pptx";
   if (ext === "json") return "backup";
+  if (mimeType === "application/pdf") return "pdf";
   if (mimeType === "text/markdown") return "markdown";
   if (mimeType === "text/html") return "html";
   if (mimeType.startsWith("text/")) return "text";

@@ -1,6 +1,7 @@
 /**
- * Imports files as new pages: Markdown, plain text, web pages (HTML) and Word
- * documents (.docx). A Windowsill backup file (.json) is restored instead.
+ * Imports files as new pages: Markdown, plain text, web pages (HTML), Word
+ * documents (.docx), PDFs and PowerPoint decks (.pptx). A Windowsill backup
+ * file (.json) is restored instead.
  *
  * Markdown and HTML are converted by BlockNote itself, so headings, lists,
  * to-dos, quotes, code and tables come through as real blocks. Word files are
@@ -13,7 +14,18 @@ import { parseBackup, restoreBackup } from "../db/backup";
 import { createPage } from "../db/pages";
 import type { Page } from "../db/types";
 import { blocksToPlainText } from "../editor/plainText";
-import { htmlTitle, importKind, MAX_IMPORT_BYTES, splitMarkdownTitle, textToBlocks, titleFromFileName } from "./fileTypes";
+import {
+  htmlTitle,
+  importKind,
+  maxImportBytes,
+  splitMarkdownTitle,
+  textToBlocks,
+  titleFromFileName,
+  unsupportedReason,
+} from "./fileTypes";
+
+/** Pictures found inside PDFs and slide decks are saved on the device like uploaded images. */
+const storeImage = (blob: Blob) => saveAsset(blob);
 
 export interface ImportResult {
   pages: Page[];
@@ -74,6 +86,18 @@ function withoutRepeatedTitle(blocks: unknown[], title: string): unknown[] {
 async function convert(file: File, kind: Exclude<ReturnType<typeof importKind>, "backup" | null>) {
   const fallbackTitle = titleFromFileName(file.name);
   if (kind === "text") return { title: fallbackTitle, blocks: textToBlocks(await file.text()) as unknown[] };
+  if (kind === "pptx") {
+    const { pptxToBlocks } = await import("./pptx"); // loaded only when a slide deck is imported
+    const deck = await pptxToBlocks(await file.arrayBuffer(), storeImage);
+    return { title: deck.title ?? fallbackTitle, blocks: deck.blocks as unknown[] };
+  }
+  if (kind === "pdf") {
+    const { pdfToBlocks, MAX_PDF_PAGES } = await import("./pdf"); // loaded only when a PDF is imported
+    const pdf = await pdfToBlocks(await file.arrayBuffer(), storeImage);
+    const blocks: unknown[] = pdf.blocks;
+    if (pdf.truncated) blocks.push({ type: "paragraph", content: `(Only the first ${MAX_PDF_PAGES} pages were imported.)` });
+    return { title: pdf.title ?? fallbackTitle, blocks };
+  }
   const editor = await getConverter();
   if (kind === "markdown") {
     const { title, body } = splitMarkdownTitle(await file.text());
@@ -91,11 +115,11 @@ export async function importFiles(files: File[], parentId: string | null = null)
   for (const file of files) {
     const kind = importKind(file.name, file.type);
     if (!kind) {
-      result.skipped.push({ name: file.name, reason: "this file type isn't supported" });
+      result.skipped.push({ name: file.name, reason: unsupportedReason(file.name) });
       continue;
     }
-    if (file.size > MAX_IMPORT_BYTES) {
-      result.skipped.push({ name: file.name, reason: "it's larger than 10 MB" });
+    if (file.size > maxImportBytes(kind)) {
+      result.skipped.push({ name: file.name, reason: `it's larger than ${maxImportBytes(kind) / 1024 / 1024} MB` });
       continue;
     }
     try {

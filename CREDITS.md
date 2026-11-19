@@ -42,5 +42,7 @@ Only use media that is free for commercial use: **CC0**, the **Pexels License** 
 | [zustand](https://zustand.docs.pmnd.rs), [fractional-indexing](https://github.com/rocicorp/fractional-indexing) | State, page ordering | MIT / CC0 |
 | [Tailwind CSS](https://tailwindcss.com) | Styling | MIT |
 | [mammoth](https://github.com/mwilliamson/mammoth.js) | Importing Word (.docx) files | BSD 2-Clause |
+| [pdf.js](https://mozilla.github.io/pdf.js/) (Mozilla) | Importing PDF files | Apache 2.0 |
+| [JSZip](https://stuk.github.io/jszip/) | Reading PowerPoint (.pptx) files | MIT |
 
 Emoji are drawn by your operating system's emoji font.

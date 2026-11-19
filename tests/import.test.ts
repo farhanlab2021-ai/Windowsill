@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { getAllPages, getContent } from "@/lib/db/pages";
-import { htmlTitle, importKind, splitMarkdownTitle, textToBlocks, titleFromFileName } from "@/lib/import/fileTypes";
+import {
+  htmlTitle,
+  importKind,
+  maxImportBytes,
+  splitMarkdownTitle,
+  textToBlocks,
+  titleFromFileName,
+  unsupportedReason,
+} from "@/lib/import/fileTypes";
 import { describeImport, importFiles } from "@/lib/import/importFiles";
 
 describe("importFiles (plain text, no editor needed)", () => {
@@ -41,6 +49,21 @@ describe("file import helpers", () => {
     expect(importKind("no-extension", "text/plain")).toBe("text");
     expect(importKind("photo.png", "image/png")).toBeNull();
     expect(importKind("old.doc")).toBeNull();
+    expect(importKind("Lecture 5.PDF")).toBe("pdf");
+    expect(importKind("download", "application/pdf")).toBe("pdf");
+    expect(importKind("Slides.pptx")).toBe("pptx");
+    expect(importKind("Old slides.ppt")).toBeNull();
+  });
+
+  it("explains old Office formats with a way round", () => {
+    expect(unsupportedReason("Old slides.ppt")).toMatch(/save as \.pptx/);
+    expect(unsupportedReason("essay.doc")).toMatch(/save as \.docx/);
+    expect(unsupportedReason("photo.png")).toBe("this file type isn't supported");
+  });
+
+  it("allows bigger PDFs and slide decks than text files", () => {
+    expect(maxImportBytes("pdf")).toBe(50 * 1024 * 1024);
+    expect(maxImportBytes("markdown")).toBe(10 * 1024 * 1024);
   });
 
   it("makes a page title from the file name", () => {

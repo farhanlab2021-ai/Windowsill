@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Third-party files copied into public/ by scripts/copy-emoji.mjs (not our code).
+    "public/pdfjs/**",
+    "public/emoji/**",
   ]),
 ]);
 

@@ -17,7 +17,7 @@
  *
  * To force everyone onto a fresh cache, change VERSION.
  */
-const VERSION = "windowsill-v2";
+const VERSION = "windowsill-v3";
 const PAGES = ["/", "/focus"];
 const PRECACHE = [
   "/manifest.webmanifest",
@@ -26,6 +26,7 @@ const PRECACHE = [
   "/icons/icon-512.png",
   "/emoji/en/data.json",
   "/emoji/en/messages.json",
+  "/pdfjs/pdf.worker.min.mjs", // lets PDF import work offline
 ];
 
 /** Finds the build files a page needs, by reading its HTML. */
