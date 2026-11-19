@@ -7,6 +7,7 @@ A calm study workspace for university and college students:
 - **Student templates:** Class Notes, Assignment Tracker, Exam Planner, Weekly Timetable,
   Reading List, with dates that count down ("in 5 days").
 - **Search** across everything with `Ctrl/Cmd + K`.
+- **Import files** as pages: Markdown, plain text, Word (.docx) and web pages (.html).
 - **A Pomodoro timer** (25/5, 50/10 or custom) with a chime, notifications and focus stats.
 - **Focus Mode:** a view through a window (beach or mountain cliff, day/sunset/night) with
   optional ambient sounds and a notes panel.
@@ -252,6 +253,9 @@ they press **Play sounds**).
   images included, as one `.json` file. **Restore from backup** merges a file back in. It never
   deletes anything and keeps whichever version of a page is newer, so it's also how you move
   notes to another device.
+- **Importing other notes:** **Import file** (sidebar or Home) turns `.md`, `.txt`, `.docx` and
+  `.html` files into pages, several at once; a page's **…** menu imports them as its sub-pages.
+  Choosing a Windowsill backup `.json` there restores it.
 - **Keeping it safe:** browsers may clear site data when a device runs low on space. Installing
   the app, or pressing **Keep my data safe** in Settings, asks the browser not to.
 

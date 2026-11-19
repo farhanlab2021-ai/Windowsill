@@ -1,6 +1,7 @@
 "use client";
 
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, Upload } from "lucide-react";
+import { useImportFiles } from "@/hooks/useImportFiles";
 import { TemplateCards } from "@/components/templates/TemplateCards";
 import { SimpleTopBar } from "./SimpleTopBar";
 import { usePageActions } from "@/hooks/usePageActions";
@@ -19,6 +20,7 @@ function greeting() {
 /** Shown when no page is open: a greeting and recently edited pages. */
 export function Home({ pages }: { pages: Page[] }) {
   const { createAndOpen, openPage } = usePageActions();
+  const importFiles = useImportFiles();
   const recent = pages
     .filter((p) => p.deletedAt === null)
     .sort((a, b) => b.updatedAt - a.updatedAt)
@@ -38,6 +40,14 @@ export function Home({ pages }: { pages: Page[] }) {
       >
         <Plus className="size-4" /> New page
       </button>
+      <button
+        type="button"
+        onClick={() => importFiles(null)}
+        className="mt-8 ml-2 inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-medium text-ink hover:bg-hover"
+      >
+        <Upload className="size-4" /> Import file
+      </button>
+      <p className="mt-2 text-xs text-muted">Import Markdown (.md), text (.txt), Word (.docx) or web pages (.html) as pages.</p>
 
       <section className="mt-12">
         <h2 className="mb-3 text-xs font-semibold tracking-wider text-faint uppercase">Start from a template</h2>

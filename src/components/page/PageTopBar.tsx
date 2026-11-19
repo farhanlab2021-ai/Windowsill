@@ -1,6 +1,7 @@
 "use client";
 
-import { FilePlus2, Menu as MenuIcon, MoreHorizontal, Star, Trash2 } from "lucide-react";
+import { FilePlus2, Menu as MenuIcon, MoreHorizontal, Star, Trash2, Upload } from "lucide-react";
+import { useImportFiles } from "@/hooks/useImportFiles";
 import { Fragment } from "react";
 import type { SaveStatus } from "@/components/editor/Editor";
 import { FocusModeButton } from "@/components/focus/FocusModeButton";
@@ -24,6 +25,7 @@ export function PageTopBar({ page, status }: { page: Page; status: SaveStatus })
   const pages = usePages() ?? [];
   const { createAndOpen, trashWithUndo, openPage } = usePageActions();
   const setSidebarOpen = useUI((s) => s.setSidebarOpen);
+  const importFiles = useImportFiles();
   const crumbs = ancestorsOf(pages, page.id);
 
   return (
@@ -84,6 +86,7 @@ export function PageTopBar({ page, status }: { page: Page; status: SaveStatus })
         )}
         items={[
           { label: "Add sub-page", icon: <FilePlus2 />, onSelect: () => void createAndOpen(page.id) },
+          { label: "Import files as sub-pages", icon: <Upload />, onSelect: () => importFiles(page.id) },
           "separator",
           { label: "Move to trash", icon: <Trash2 />, danger: true, onSelect: () => void trashWithUndo(page) },
         ]}

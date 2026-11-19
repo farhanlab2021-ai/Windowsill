@@ -2,6 +2,22 @@
 
 What was built in each phase of Windowsill.
 
+## After launch (2026-11-20)
+
+### Added
+- **Import file** (sidebar, Home, and a page's **…** menu → *Import files as sub-pages*): turn files
+  into pages, several at once. Markdown (`.md`) and web pages (`.html`) keep headings, lists, to-dos,
+  quotes, code and tables; Word (`.docx`, via the free `mammoth` library) keeps headings, bold and
+  paragraphs; plain text (`.txt`) becomes paragraphs. A `# Title` / `<title>` becomes the page title,
+  otherwise the file name. Pictures inside a file are saved on the device. A Windowsill backup
+  (`.json`) is restored. Files over 10 MB, empty files and other types are skipped with a reason.
+  The converters only load when someone imports.
+
+### Fixed
+- Opening a link to a page that isn't on this device (e.g. copied from another device, or an
+  installed phone app with its own storage) now opens Home with an explanation instead of
+  "Page not found".
+
 ## Phase 5 — Installable, offline, polish, deployment (2026-11-19)
 
 ### Added

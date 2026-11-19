@@ -1,7 +1,8 @@
 "use client";
 
 import { AppLink } from "@/components/ui/AppLink";
-import { AppWindow, BarChart3, FileText, LayoutTemplate, Monitor, Moon, Plus, Search, Settings, Sun, Trash2, X } from "lucide-react";
+import { AppWindow, BarChart3, FileText, LayoutTemplate, Monitor, Moon, Plus, Search, Settings, Sun, Trash2, Upload, X } from "lucide-react";
+import { useImportFiles } from "@/hooks/useImportFiles";
 import { useState } from "react";
 import { Logo } from "@/components/ui/Logo";
 import { Menu } from "@/components/ui/Menu";
@@ -54,6 +55,7 @@ export function Sidebar({ pages }: { pages: Page[] }) {
   const setTemplateDialogOpen = useUI((s) => s.setTemplateDialogOpen);
   const setSearchOpen = useUI((s) => s.setSearchOpen);
   const setSettingsOpen = useUI((s) => s.setSettingsOpen);
+  const importFiles = useImportFiles();
   const view = useCurrentView();
   const openView = useOpenView();
 
@@ -104,6 +106,14 @@ export function Sidebar({ pages }: { pages: Page[] }) {
             className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm text-muted hover:bg-hover hover:text-ink"
           >
             <LayoutTemplate className="size-4" /> New from template
+          </button>
+          <button
+            type="button"
+            onClick={() => importFiles(null)}
+            title="Import Markdown, text, Word or web-page files as pages (or a backup)"
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm text-muted hover:bg-hover hover:text-ink"
+          >
+            <Upload className="size-4" /> Import file
           </button>
           <button
             type="button"

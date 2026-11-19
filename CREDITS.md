@@ -41,5 +41,6 @@ Only use media that is free for commercial use: **CC0**, the **Pexels License** 
 | [frimousse](https://frimousse.liveblocks.io) / [Emojibase](https://emojibase.dev) data | Emoji picker | MIT |
 | [zustand](https://zustand.docs.pmnd.rs), [fractional-indexing](https://github.com/rocicorp/fractional-indexing) | State, page ordering | MIT / CC0 |
 | [Tailwind CSS](https://tailwindcss.com) | Styling | MIT |
+| [mammoth](https://github.com/mwilliamson/mammoth.js) | Importing Word (.docx) files | BSD 2-Clause |
 
 Emoji are drawn by your operating system's emoji font.
