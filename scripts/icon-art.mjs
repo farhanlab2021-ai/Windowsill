@@ -1,0 +1,27 @@
+// The Windowsill app icon, as SVG. `scale` shrinks the artwork towards the
+// centre (maskable icons need it inside the middle 80%); `rounded` gives the
+// background rounded corners (normal icons) or a full square (maskable/Apple).
+export function iconSvg({ scale = 1, rounded = true } = {}) {
+  const t = (256 * (1 - scale)).toFixed(1);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7fa9cf"/>
+      <stop offset="0.55" stop-color="#e9a98a"/>
+      <stop offset="1" stop-color="#f7d59d"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="${rounded ? 112 : 0}" fill="#3c6b5e"/>
+  <g transform="translate(${t} ${t}) scale(${scale})">
+    <rect x="128" y="92" width="256" height="256" rx="30" fill="#f8f3ea"/>
+    <rect x="148" y="112" width="216" height="216" rx="14" fill="url(#sky)"/>
+    <circle cx="256" cy="262" r="34" fill="#fff1c9"/>
+    <rect x="148" y="262" width="216" height="66" fill="#6f8fb0" opacity="0.85"/>
+    <rect x="249" y="112" width="14" height="216" fill="#f8f3ea"/>
+    <rect x="148" y="190" width="216" height="14" fill="#f8f3ea"/>
+    <rect x="96" y="350" width="320" height="34" rx="12" fill="#f8f3ea"/>
+    <path d="M356 350c0-22 8-36 26-40M356 350c0-16-7-27-21-30" stroke="#a9d0b4" stroke-width="9" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>
+`;
+}

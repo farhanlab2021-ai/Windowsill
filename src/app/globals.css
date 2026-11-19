@@ -1,0 +1,185 @@
+@import "tailwindcss";
+
+/*
+ * Windowsill design tokens.
+ * Colours are CSS variables so light/dark mode only swaps values here.
+ * In components, use Tailwind classes such as `bg-surface`, `text-muted`, `border-line`.
+ */
+
+/* `dark:` classes apply when <html data-theme="dark"> is set. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  /* Warm paper and soft sage — calm, readable, high-enough contrast. */
+  --c-canvas: #faf8f4;
+  --c-surface: #ffffff;
+  --c-sidebar: #f2efe8;
+  --c-hover: #e9e5dc;
+  --c-line: #e3ded4;
+  --c-ink: #2a2925;
+  /* Text greys meet WCAG AA (4.5:1) on every light background. */
+  --c-muted: #5b574f;
+  --c-faint: #6e6a63;
+  --c-accent: #3c6b5e;
+  --c-accent-ink: #ffffff;
+  --c-accent-soft: #e2ece7;
+  --c-danger: #b23b2e;
+  --c-focus: #3c6b5e;
+  --shadow-pop: 0 10px 30px -12px rgb(40 35 25 / 0.25), 0 2px 6px rgb(40 35 25 / 0.08);
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --c-canvas: #15171a;
+  --c-surface: #1c1f23;
+  --c-sidebar: #181a1d;
+  --c-hover: #262a2f;
+  --c-line: #2d3237;
+  --c-ink: #e9e6e0;
+  --c-muted: #a8a399;
+  --c-faint: #8d877d;
+  --c-accent: #8cc3ae;
+  --c-accent-ink: #11231c;
+  --c-accent-soft: #22332d;
+  --c-danger: #f08a7c;
+  --c-focus: #8cc3ae;
+  --shadow-pop: 0 12px 32px -12px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.3);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-canvas: var(--c-canvas);
+  --color-surface: var(--c-surface);
+  --color-sidebar: var(--c-sidebar);
+  --color-hover: var(--c-hover);
+  --color-line: var(--c-line);
+  --color-ink: var(--c-ink);
+  --color-muted: var(--c-muted);
+  --color-faint: var(--c-faint);
+  --color-accent: var(--c-accent);
+  --color-accent-ink: var(--c-accent-ink);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-danger: var(--c-danger);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-newsreader), ui-serif, Georgia, serif;
+  --shadow-pop: var(--shadow-pop);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--c-canvas);
+  color: var(--c-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* A clear, consistent keyboard focus ring everywhere. In the "base" layer so
+ * Tailwind classes (e.g. `focus-visible:outline-none`) can still override it. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--c-focus);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+/* Respect "reduce motion": no animations or smooth scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus Mode: scenes fade in softly when they change. */
+@keyframes scene-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Steam rising from the mug on the windowsill. */
+@keyframes steam {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateY(-3px);
+    opacity: 0.85;
+  }
+}
+
+/* Group headings in the search palette (cmdk renders them itself). */
+.search-group [cmdk-group-heading] {
+  padding: 0.5rem 0.75rem 0.25rem;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-faint);
+}
+
+/* ---------------------------------------------------------------------------
+ * BlockNote editor: blend it into our palette and typography.
+ * ------------------------------------------------------------------------- */
+/* `[data-color-scheme]` makes this win over BlockNote's own light/dark theme rules. */
+.windowsill-editor .bn-container[data-color-scheme] {
+  --bn-colors-editor-background: transparent;
+  --bn-colors-editor-text: var(--c-ink);
+  --bn-colors-menu-background: var(--c-surface);
+  --bn-colors-menu-text: var(--c-ink);
+  --bn-colors-tooltip-background: var(--c-ink);
+  --bn-colors-tooltip-text: var(--c-surface);
+  --bn-colors-hovered-background: var(--c-hover);
+  --bn-colors-hovered-text: var(--c-ink);
+  --bn-colors-selected-background: var(--c-accent);
+  --bn-colors-selected-text: var(--c-accent-ink);
+  --bn-colors-side-menu: var(--c-faint);
+  --bn-colors-border: var(--c-line);
+  --bn-colors-shadow: rgb(0 0 0 / 0.12);
+  --bn-font-family: var(--font-sans);
+  --bn-border-radius: 10px;
+}
+
+/* BlockNote keeps space on the left for the drag handle. On phones we shrink
+ * it; on larger screens the wrapper's negative margin lines text up with the title. */
+.windowsill-editor .bn-editor {
+  padding-inline: 0;
+  font-size: 16px;
+  line-height: 1.65;
+}
+@media (min-width: 768px) {
+  .windowsill-editor {
+    margin-inline: -54px;
+  }
+  .windowsill-editor .bn-editor {
+    padding-inline: 54px;
+  }
+}
+
+/* In the narrow Focus Mode notes panel: no negative margin, a slimmer drag-handle gutter. */
+.focus-notes .windowsill-editor {
+  margin-inline: 0;
+}
+.focus-notes .windowsill-editor .bn-editor {
+  padding-inline: 36px 16px;
+}
+
+.windowsill-editor .bn-block-content[data-content-type="heading"] {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
