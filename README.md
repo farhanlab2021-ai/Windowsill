@@ -40,8 +40,11 @@ Open <http://localhost:3000>. Code changes appear instantly. Stop the server wit
 | `npm run media` | Re-scans `public/scenes` and `public/sounds` for media files you added |
 
 **Try it on your phone:** while `npm run dev` runs, find your computer's IP with `ipconfig`
-("IPv4 Address") and open `http://<that-ip>:3000` on a phone on the same Wi-Fi.
-(Installing and offline mode need HTTPS, so test those on the deployed site.)
+("IPv4 Address" under "Wi-Fi", e.g. `192.168.0.100`) and open `http://<that-ip>:3000` on a phone on
+the same Wi-Fi. `next.config.ts` (`allowedDevOrigins`) already lets home, campus and hotspot
+addresses use the dev server. If the phone can't connect, check that Windows set your Wi-Fi as a
+**Private** network and allowed **Node.js** through the firewall (Windows asks the first time).
+Installing and offline mode need HTTPS, so test those on the deployed site.
 
 ## 2. Test offline mode and installing
 

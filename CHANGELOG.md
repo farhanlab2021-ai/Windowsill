@@ -24,6 +24,9 @@ What was built in each phase of Windowsill.
 - Old `.ppt` and `.doc` files get a clear message explaining how to save them as `.pptx` / `.docx`.
 - The PDF reader's worker is served from the app itself and saved for offline use (service worker v3).
 
+- The development server (`npm run dev`) can be opened from phones and tablets on the same Wi-Fi
+  (`allowedDevOrigins` for private network addresses).
+
 ### Fixed
 - Opening a link to a page that isn't on this device (e.g. copied from another device, or an
   installed phone app with its own storage) now opens Home with an explanation instead of
